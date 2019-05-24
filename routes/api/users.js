@@ -3,6 +3,13 @@ var router = require('express').Router();
 var passport = require('passport');
 var User = mongoose.model('User');
 var auth = require('../auth');
+const uuidv1 = require('uuid/v1');
+const Chatkit = require('@pusher/chatkit-server')
+const chatkit = new Chatkit.default({
+  instanceLocator: process.env.CHATKIT_INSTANCE_LOCATOR,
+  key: process.env.CHATKIT_KEY,
+})
+
 
 router.get('/user', auth.required, function(req, res, next){
   User.findById(req.payload.id).then(function(user){
@@ -63,13 +70,38 @@ router.post('/users/login', function(req, res, next){
 router.post('/users', function(req, res, next){
   var user = new User();
 
+  user.userId = uuidv1();
+  user.teamName = req.body.user.teamName;
   user.username = req.body.user.username;
   user.email = req.body.user.email;
   user.setPassword(req.body.user.password);
 
+  // Save local user details into DB
   user.save().then(function(){
+    // Create New Chatkit User
+    chatkit.createUser({
+      id: user.userId,
+      name: user.username
+    }).then(() => {
+      console.log('User created successfully');
+      // Create New Team Chat Room
+      chatkit.createRoom({
+        creatorId: user.userId,
+        name: user.teamName,
+        isPrivate: true
+      }).then(() => {
+        console.log('Room created successfully');
+      }).catch((err) => {
+        console.log(err);
+      });
+    }).catch((err) => {
+      console.log(err);
+    })
     return res.json({user: user.toAuthJSON()});
   }).catch(next);
 });
+
+
+  
 
 module.exports = router;
