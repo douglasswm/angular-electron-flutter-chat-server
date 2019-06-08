@@ -8,6 +8,10 @@ passport.use(new LocalStrategy({
   passwordField: 'user[password]'
 }, function(email, password, done) {
   User.findOne({email: email}).then(function(user){
+    if (!user.confirmed){
+      throw new Error('Please confirm your email to login');
+    }
+
     if(!user || !user.validPassword(password)){
       return done(null, false, {errors: {'email or password': 'is invalid'}});
     }
@@ -15,3 +19,6 @@ passport.use(new LocalStrategy({
     return done(null, user);
   }).catch(done);
 }));
+
+
+

@@ -9,6 +9,7 @@ var http = require('http'),
     passport = require('passport'),
     errorhandler = require('errorhandler'),
     mongoose = require('mongoose');
+    history = require('connect-history-api-fallback');
 
 const { SHA256 } = require('sha2');    
 const Chatkit = require('@pusher/chatkit-server')
@@ -22,6 +23,7 @@ var isProduction = process.env.NODE_ENV === 'production';
 // Create global app object
 var app = express();
 
+app.use(history());
 app.use(cors());
 
 // Normal express config defaults
@@ -41,8 +43,9 @@ if (!isProduction) {
 if(isProduction){
   mongoose.connect(process.env.MONGODB_URI);
 } else {
-  mongoose.connect('mongodb://localhost/flutterchat');
+  mongoose.connect('mongodb://localhost/flutterchat', {useNewUrlParser: true});
   mongoose.set('debug', true);
+  mongoose.set('useCreateIndex', true);
 }
 
 require('./models/User');

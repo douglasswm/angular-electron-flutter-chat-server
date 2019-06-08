@@ -12,7 +12,8 @@ var UserSchema = new mongoose.Schema({
   bio: String,
   image: String,
   hash: String,
-  salt: String
+  salt: String,
+  confirmed: {type: Boolean, default: false}
 }, {timestamps: true});
 
 UserSchema.plugin(uniqueValidator, {message: 'taken.'});
