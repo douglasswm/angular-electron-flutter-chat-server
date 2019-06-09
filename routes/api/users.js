@@ -14,22 +14,12 @@ const chatkit = new Chatkit.default({
   instanceLocator: process.env.CHATKIT_INSTANCE_LOCATOR,
   key: process.env.CHATKIT_KEY,
 })
-var whitelist = ["http://localhost:8080"];
-var corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  }
-};
 
 const EMAIL_SECRET = 'asdf1093KMnzxcvnkljvasdu09123nlasdasdf';
 
 const options = {
   auth: {
-    api_key: '9e59a73f4f2ad8ddfdaf69c862db7086-87cdd773-7bd017ea',
+    api_key: process.env.MAILGUN_API_KEY,
     domain: 'mg.lemo.io'
   },
   host: 'api.mailgun.net'
@@ -107,7 +97,7 @@ router.post('/users/login', function(req, res, next){
   })(req, res, next);
 });
 
-router.post('/users', cors(corsOptions), async (req, res, next) => {
+router.post('/users', async (req, res, next) => {
   var user = new User();
 
   user.userId = uuidv1();
@@ -147,7 +137,7 @@ router.post('/users', cors(corsOptions), async (req, res, next) => {
               to: user.email,
               subject: 'Confirm Email',
               html: `Please click this email to confirm your email: <a href="${url}">${url}</a>`,
-            });
+            }).catch((err) => console.log(err));
           },
         );
       }).catch((err) => {
@@ -156,8 +146,6 @@ router.post('/users', cors(corsOptions), async (req, res, next) => {
     }).catch((err) => {
       console.log(err);
     })
-    return res.json({user: {username: ""}});
-    // return res.redirect(302, 'http://localhost:8080/login');
   }).catch(next);
   
 });
